@@ -4,13 +4,14 @@ import email, mimetypes, smtplib
 import os
 
 class Mailsender:
-  def __init__( self, subject=None, body=None, sender={'name': None, 'address': None }, recipient={'name': None, 'address': None } , cc={'name': None, 'address': None } , bcc={'name': None, 'address': None } ):
+  def __init__( self, subject=None, body=None, sender={'name': None, 'address': None }, recipient={'name': None, 'address': None } , cc={'name': None, 'address': None }, bcc={'name': None, 'address': None }, mailserver={'hostname': None, 'port': 25 } ):
     self.subject   = subject
     self.body      = body
     self.sender    = sender
     self.recipient = recipient
     self.CC        = cc
     self.BCC       = bcc
+    self.mailserver= mailserver
     self.message   = email.message.EmailMessage()
 
     if self.subject is not None:                           self.message.add_header("Subject", self.subject)
@@ -41,7 +42,7 @@ class Mailsender:
       self.message.add_attachment(attachment.read(), maintype='text', subtype='html', filename=os.path.basename(filepath))
 
   def send(self):
-    with smtplib.SMTP("epsys59a.epsys.nl", 525) as server:
+    with smtplib.SMTP(self.mailserver['hostname'], self.mailserver['port']) as server:
       #server.login(sender_email, password)
       server.send_message(msg=self.message)
     #safety for mailings
