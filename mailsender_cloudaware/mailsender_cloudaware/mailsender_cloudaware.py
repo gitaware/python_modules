@@ -4,7 +4,7 @@ import email, mimetypes, smtplib
 import os
 
 class Mailsender:
-  def __init__( self, subject=None, body=None, sender={'name': None, 'address': None }, recipient={'name': None, 'address': None } , cc={'name': None, 'address': None }, bcc={'name': None, 'address': None }, mailserver={'hostname': None, 'port': 25 } ):
+  def __init__( self, subject=None, body=None, sender={'name': None, 'address': None }, recipient={'name': None, 'address': None } , cc={'name': None, 'address': None }, bcc={'name': None, 'address': None }, mailserver={'hostname': 'localhost', 'port': 25 } ):
     self.subject   = subject
     self.body      = body
     self.sender    = sender

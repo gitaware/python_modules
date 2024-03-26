@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
   name='mailsender_cloudaware',
-  version='0.0.1',
+  version='0.0.2',
   author='Jeroen Hermans',
   author_email='j.hermans@cloudaware.eu',
   description='Python module om mail te verzenden',
