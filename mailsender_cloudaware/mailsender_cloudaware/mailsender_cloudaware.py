@@ -67,6 +67,11 @@ class Mailsender:
       self.message['Cc']      = self.CC
     if self.BCC:
       self.message['Bcc']     = self.BCC
+    #MIXED
+    #| ALTERNATIVE
+    #| | text part
+    #| | html part
+    #| attachment
     body = MIMEMultipart('alternative')
     if self.txt_body is not None:
       body.attach(MIMEText(self.txt_body, "plain"))
