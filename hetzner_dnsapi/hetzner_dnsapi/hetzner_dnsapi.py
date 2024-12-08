@@ -7,10 +7,8 @@ import os
 
 #DOCS: https://dns.hetzner.com/api-docs
 class HetznerDNSAPI:
-  def __init__(self):
-    config = configparser.ConfigParser()
-    config.read( os.path.join(os.path.dirname(__file__),"hetzner_dnsapi.ini") )
-    self.apikey = config.get("hetzner", "apikey")
+  def __init__(self, apikey):
+    self.apikey = apikey
     self.sess   = requests.Session()
 
   def make_request(self, url, method='GET', data=None, params=None):
