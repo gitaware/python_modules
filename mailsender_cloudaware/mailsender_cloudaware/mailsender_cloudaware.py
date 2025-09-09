@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from mimetypes import guess_type
 import os
+from io import IOBase
 
 class Mailsender:
   def __init__( self, subject=None, body=None, html_body=None, sender=None, recipient=None , cc=None, bcc=None, mailserver={'hostname': 'localhost', 'port': 25 } ):
@@ -45,19 +46,64 @@ class Mailsender:
   def set_bcc(self, bcc):
     self.BCC = formataddr((bcc['name'], bcc['address']))
 
-  def add_attachment(self, filepath):
-    mimetype, encoding = guess_type(filepath)
-    mimetype = mimetype.split('/', 1)
-    with open(filepath, "rb") as attachment:
-      part = MIMEBase(mimetype[0], mimetype[1])
-      part.set_payload(attachment.read())
+  def add_attachment(self, file, filename=None):
+      """
+      Add an attachment to the email.
 
-    encoders.encode_base64(part)
-    part.add_header(
-    "Content-Disposition", 'attachment',
-    filename="%s"%(os.path.basename(filepath))
-    )
-    self.message.attach(part)
+      Parameters:
+          file: str (filepath), bytes, or file-like object (BytesIO, etc.)
+          filename: required if file is bytes or file-like object
+      """
+      # Determine if input is a file path
+      if isinstance(file, str):
+          filepath = file
+          filename = filename or os.path.basename(filepath)
+          mimetype, encoding = guess_type(filepath)
+          with open(filepath, "rb") as f:
+              file_content = f.read()
+      # Check if file-like object
+      elif isinstance(file, IOBase):
+          if not filename:
+              raise ValueError("Filename must be provided for file-like objects")
+          mimetype, encoding = guess_type(filename)
+          file_content = file.read()
+      # Check if raw bytes
+      elif isinstance(file, bytes):
+          if not filename:
+              raise ValueError("Filename must be provided for bytes")
+          mimetype, encoding = guess_type(filename)
+          file_content = file
+      else:
+          raise TypeError("Unsupported file type. Must be path, file-like object, or bytes.")
+
+      # Default MIME type if unknown
+      if mimetype is None:
+          mimetype = "application/octet-stream"
+
+      maintype, subtype = mimetype.split('/', 1)
+      part = MIMEBase(maintype, subtype)
+      part.set_payload(file_content)
+      encoders.encode_base64(part)
+      part.add_header(
+          "Content-Disposition",
+          "attachment",
+          filename=filename
+      )
+      self.message.attach(part)
+
+  #def add_attachment(self, filepath):
+  #  mimetype, encoding = guess_type(filepath)
+  #  mimetype = mimetype.split('/', 1)
+  #  with open(filepath, "rb") as attachment:
+  #    part = MIMEBase(mimetype[0], mimetype[1])
+  #    part.set_payload(attachment.read())
+
+  #  encoders.encode_base64(part)
+  #  part.add_header(
+  #  "Content-Disposition", 'attachment',
+  #  filename="%s"%(os.path.basename(filepath))
+  #  )
+  #  self.message.attach(part)
 
   def send(self):
     self.message['Subject'] = self.subject
