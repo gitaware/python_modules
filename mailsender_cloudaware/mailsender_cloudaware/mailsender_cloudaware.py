@@ -11,7 +11,15 @@ import os
 from io import IOBase
 
 class Mailsender:
-  def __init__( self, subject=None, body=None, html_body=None, sender=None, recipient=None , cc=None, bcc=None, mailserver={'hostname': 'localhost', 'port': 25 } ):
+  def __init__( self, subject=None, body=None, html_body=None, sender=None, recipient=None , cc=None, bcc=None,
+                mailserver={
+                  'hostname': 'localhost',
+                  'port': 25,
+                  'username': None,
+                  'password': None,
+                  'use_tls': False,   # STARTTLS (typical on port 587 or custom ports)
+                  'use_ssl': False    # Implicit SSL (typical on port 465)
+                } ):
     self.subject   = subject
     self.txt_body  = body
     self.html_body = html_body
@@ -91,20 +99,6 @@ class Mailsender:
       )
       self.message.attach(part)
 
-  #def add_attachment(self, filepath):
-  #  mimetype, encoding = guess_type(filepath)
-  #  mimetype = mimetype.split('/', 1)
-  #  with open(filepath, "rb") as attachment:
-  #    part = MIMEBase(mimetype[0], mimetype[1])
-  #    part.set_payload(attachment.read())
-
-  #  encoders.encode_base64(part)
-  #  part.add_header(
-  #  "Content-Disposition", 'attachment',
-  #  filename="%s"%(os.path.basename(filepath))
-  #  )
-  #  self.message.attach(part)
-
   def send(self):
     self.message['Subject'] = self.subject
     self.message['From']    = self.sender
@@ -125,9 +119,26 @@ class Mailsender:
       body.attach(MIMEText(self.html_body, "html"))
     self.message.attach(body)
 
-    with smtplib.SMTP(self.mailserver['hostname'], self.mailserver['port']) as server:
-      #server.login(sender_email, password)
+    hostname = self.mailserver.get('hostname', 'localhost')
+    port     = int(self.mailserver.get('port', 25))
+    use_ssl  = bool(self.mailserver.get('use_ssl', False))
+    use_tls  = bool(self.mailserver.get('use_tls', False))
+
+    username = self.mailserver.get('username')
+    password = self.mailserver.get('password')
+    smtp_cls = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
+    with smtp_cls(hostname, port) as server:
+      # If using STARTTLS on a plain SMTP connection
+      if (not use_ssl) and use_tls:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+
+      if username and password:
+        server.login(username, password)
+
       server.send_message(self.message )
+
     #safety for mailings
     self.subject   = None
     self.txt_body  = None
